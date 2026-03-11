@@ -278,10 +278,19 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function useGPS() {
-  document.getElementById('loc-dot').style.background = 'var(--amber)';
+  const dot = document.getElementById('loc-dot');
+  dot.style.background = 'var(--amber)';
+  dot.style.animation = 'none';
   navigator.geolocation?.getCurrentPosition(
-    pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-    () => alert('GPS unavailable — enter a location manually.')
+    pos => {
+      dot.style.background = 'var(--green)';
+      dot.style.animation = '';
+      fetchWeather(pos.coords.latitude, pos.coords.longitude);
+    },
+    () => {
+      dot.style.background = 'var(--red)';
+      alert('GPS unavailable — enter a location manually.');
+    }
   );
 }
 
@@ -298,7 +307,10 @@ function searchLocation() {
     .catch(() => alert('Geocoding failed.'));
 }
 
+let _lat = null, _lon = null;
+
 async function fetchWeather(lat, lon) {
+  _lat = lat; _lon = lon;
   document.getElementById('weather-content').innerHTML = '<div class="loading"><div class="spin"></div><span>Fetching NOAA data…</span></div>';
   document.getElementById('forecast-section').style.display = 'none';
   document.getElementById('stats-row').style.display = 'none';
@@ -307,7 +319,7 @@ async function fetchWeather(lat, lon) {
     const res = await fetch(`/weather/point?lat=${lat}&lon=${lon}`);
     const data = await res.json();
     currentData = data;
-    renderWeather(data);
+    renderWeather(data, lat, lon);
     if (isPro) loadRadar(lat, lon);
   } catch(e) {
     document.getElementById('weather-content').innerHTML = `<p style="color:var(--red)">Failed to load weather: ${e.message}</p>`;
@@ -321,7 +333,7 @@ const signalTheme = {
   extreme: { bg:'#2D0040', border:'rgba(162,28,175,0.5)', glow:'rgba(162,28,175,0.15)',color:'#A855F7',  label:'EXTREME' },
 };
 
-function renderWeather(data) {
+function renderWeather(data, lat, lon) {
   const sig = signalTheme[data.signal] || signalTheme.safe;
   const card = document.getElementById('signal-card');
   card.style.background = sig.bg;
@@ -432,9 +444,18 @@ async function loadRadar(lat, lon) {
     const d = await r.json();
     document.getElementById('radar-frame').innerHTML = `
       <div style="position:relative;width:100%;height:100%;">
-        <img src="${d.img}" alt="NOAA Radar ${d.station}" style="width:100%;height:100%;object-fit:cover;" 
-             onerror="this.parentNode.innerHTML='<div style=\'padding:20px;color:var(--text2);text-align:center;\'>Radar image loading… <a href=\'${d.url}\' target=\'_blank\' style=\'color:var(--primary);\'>Open on weather.gov</a></div>'">
-        <a href="${d.url}" target="_blank" style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.6);color:var(--primary);font-size:10px;padding:4px 8px;border-radius:6px;text-decoration:none;font-weight:700;">STATION: ${d.station} →</a>
+        <iframe 
+          src="https://radar.weather.gov/station/${d.station}/standard"
+          style="width:100%;height:100%;border:none;border-radius:12px;"
+          title="NOAA Radar ${d.station}"
+          loading="lazy">
+        </iframe>
+        <a href="https://radar.weather.gov/station/${d.station}/standard" target="_blank" 
+           style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.75);
+           color:var(--primary);font-size:10px;padding:4px 8px;border-radius:6px;
+           text-decoration:none;font-weight:700;backdrop-filter:blur(4px);">
+          STATION: ${d.station} ↗
+        </a>
       </div>`;
   } catch(e) {
     document.getElementById('radar-frame').innerHTML = '<p style="padding:20px;color:var(--text2);">Radar unavailable.</p>';
@@ -493,16 +514,7 @@ function calcFeelsLike(tempF, windSpeedStr, humidity) {
   return `${tempF}°F`;
 }
 
-let lat, lon;
-function fetchWeather(la, lo) {
-  lat=la; lon=lo;
-  document.getElementById('weather-content').innerHTML = '<div class="loading"><div class="spin"></div><span>Fetching NOAA data…</span></div>';
-  document.getElementById('forecast-section').style.display='none';
-  document.getElementById('stats-row').style.display='none';
-  fetch(`/weather/point?lat=${la}&lon=${lo}`)
-    .then(r=>r.json()).then(data=>{currentData=data;renderWeather(data);if(isPro)loadRadar(la,lo);})
-    .catch(e=>{ document.getElementById('weather-content').innerHTML=`<p style="color:var(--red);padding:8px;">Failed: ${e.message}</p>`; });
-}
+// lat/lon stored globally via fetchWeather
 </script>
 </body>
 </html>

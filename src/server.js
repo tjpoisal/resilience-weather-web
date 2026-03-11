@@ -80,7 +80,7 @@ app.get('/billing/portal', async (req, res) => {
 
 // Login page
 app.get('/login', (req, res) => {
-  if (req.session?.plan === 'pro') return res.redirect('/');
+  if (req.session?.email && req.session?.plan === 'pro') return res.redirect('/');
   res.render('login');
 });
 
