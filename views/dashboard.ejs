@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Resilience Weather</title>
+<title>Resilience Weather · Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
@@ -20,12 +20,29 @@ body::before{content:'';position:fixed;inset:0;
   background-size:44px 44px;pointer-events:none;z-index:0;}
 .app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;}
 
+/* ─ SPLASH ─ */
+#splash{position:fixed;inset:0;z-index:9999;background:#000d1f;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  transition:opacity 0.6s ease,transform 0.6s ease;}
+#splash.hide{opacity:0;pointer-events:none;transform:scale(1.04);}
+.splash-radar{position:relative;width:140px;height:140px;display:flex;align-items:center;justify-content:center;}
+.splash-ring{position:absolute;border-radius:50%;border:1px solid rgba(74,158,255,0.25);animation:radar-pulse 2s ease-out infinite;}
+.splash-ring:nth-child(1){width:140px;height:140px;animation-delay:0s;}
+.splash-ring:nth-child(2){width:95px;height:95px;animation-delay:0.4s;}
+.splash-ring:nth-child(3){width:54px;height:54px;animation-delay:0.8s;}
+@keyframes radar-pulse{0%{opacity:0.8;border-color:rgba(74,158,255,0.5);}100%{opacity:0;transform:scale(1.3);border-color:rgba(74,158,255,0);}}
+.splash-shield{position:relative;z-index:2;width:46px;height:46px;}
+.splash-wordmark{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:3px;color:var(--primary);font-weight:700;}
+.splash-wordmark span{color:rgba(255,255,255,0.3);}
+.splash-bar{width:100px;height:2px;background:rgba(74,158,255,0.15);border-radius:2px;overflow:hidden;}
+.splash-bar-fill{height:100%;width:0;background:linear-gradient(90deg,#4A9EFF,#10B981);border-radius:2px;animation:bar-fill 1.4s ease forwards;}
+@keyframes bar-fill{to{width:100%;}}
+
 /* ─ NAV ─ */
 nav{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;
   border-bottom:1px solid var(--border);background:rgba(0,20,51,0.85);
   backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;}
-.nav-logo{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;
-  color:var(--primary);letter-spacing:2px;text-decoration:none;}
+.nav-logo{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--primary);letter-spacing:2px;text-decoration:none;}
 .nav-logo span{color:rgba(255,255,255,0.35);}
 .nav-right{display:flex;align-items:center;gap:10px;}
 .plan-badge{font-size:9px;font-weight:800;letter-spacing:1.5px;padding:3px 10px;border-radius:999px;}
@@ -44,40 +61,29 @@ main{flex:1;padding:28px 24px;max-width:1100px;width:100%;margin:0 auto;}
 /* ─ LOCATION BAR ─ */
 .loc-bar{display:flex;align-items:center;gap:10px;margin-bottom:24px;flex-wrap:wrap;}
 .loc-input{flex:1;min-width:220px;background:var(--surface);border:1px solid var(--border);
-  border-radius:10px;padding:10px 14px;color:var(--text);font-family:'DM Sans',sans-serif;
-  font-size:13px;outline:none;}
+  border-radius:10px;padding:10px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;}
 .loc-input:focus{border-color:var(--primary);}
-.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);
-  box-shadow:0 0 6px var(--green);animation:blink 1.4s ease infinite;}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 1.4s ease infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
 
 /* ─ SIGNAL CARD ─ */
-.signal-card{
-  border-radius:20px;padding:28px 24px;margin-bottom:20px;
-  border:1px solid;position:relative;overflow:hidden;
-  transition:background 0.5s,border-color 0.5s;
-  background:var(--sig-bg,var(--bg2));
-  border-color:var(--sig-border,var(--border));
-}
-.signal-card::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(circle at 30% 50%, var(--sig-glow,rgba(74,158,255,0.08)) 0%,transparent 70%);
-  pointer-events:none;
-}
-.signal-label{font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
-  color:var(--sig-color,var(--primary));margin-bottom:10px;}
-.signal-temp{font-family:'Space Mono',monospace;font-size:72px;font-weight:700;
-  color:var(--text);line-height:1;margin-bottom:6px;}
+.signal-card{border-radius:20px;padding:28px 24px;margin-bottom:20px;
+  border:1px solid;position:relative;overflow:hidden;transition:background 0.5s,border-color 0.5s;
+  background:var(--sig-bg,var(--bg2));border-color:var(--sig-border,var(--border));}
+.signal-card::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 30% 50%, var(--sig-glow,rgba(74,158,255,0.08)) 0%,transparent 70%);pointer-events:none;}
+.signal-label{font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--sig-color,var(--primary));margin-bottom:10px;}
 .signal-loc{font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;}
 .signal-desc{font-size:14px;color:var(--text2);margin-bottom:16px;}
-.alert-chip{
-  display:inline-flex;align-items:center;gap:6px;
-  font-size:11px;font-weight:700;padding:5px 12px;border-radius:999px;
-  background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);color:var(--red);
-  margin:3px 3px 0 0;
-}
+.alert-chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;
+  padding:5px 12px;border-radius:999px;background:rgba(239,68,68,0.15);
+  border:1px solid rgba(239,68,68,0.4);color:var(--red);margin:3px 3px 0 0;}
 .alert-chip.moderate{background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.4);color:var(--amber);}
 .alert-chip.minor{background:rgba(74,158,255,0.12);border-color:rgba(74,158,255,0.3);color:var(--primary);}
+
+/* ─ WEATHER SVG ICON ─ */
+.wx-icon{width:56px;height:56px;margin-bottom:8px;color:var(--text);}
+.wx-icon svg{width:100%;height:100%;}
 
 /* ─ GRID ─ */
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
@@ -88,8 +94,7 @@ main{flex:1;padding:28px 24px;max-width:1100px;width:100%;margin:0 auto;}
 
 /* ─ CARDS ─ */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;}
-.card-title{font-size:9px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;
-  color:var(--text2);margin-bottom:10px;}
+.card-title{font-size:9px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--text2);margin-bottom:10px;}
 .card-val{font-family:'Space Mono',monospace;font-size:28px;font-weight:700;color:var(--text);}
 .card-sub{font-size:12px;color:var(--text2);margin-top:3px;}
 
@@ -100,31 +105,26 @@ main{flex:1;padding:28px 24px;max-width:1100px;width:100%;margin:0 auto;}
 .fc-item{min-width:90px;background:var(--surface);border:1px solid var(--border);
   border-radius:12px;padding:12px 10px;text-align:center;flex-shrink:0;}
 .fc-day{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text2);margin-bottom:6px;}
-.fc-icon{font-size:24px;margin-bottom:6px;}
+.fc-icon{width:32px;height:32px;margin:0 auto 6px;color:var(--primary);}
+.fc-icon svg{width:100%;height:100%;}
 .fc-temp{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--text);}
 .fc-desc{font-size:10px;color:var(--text2);margin-top:3px;line-height:1.3;}
 .fc-lo{font-family:'Space Mono',monospace;font-size:12px;color:var(--text2);margin-top:1px;}
 
 /* ─ PRO LOCK ─ */
-.pro-lock{
-  border-radius:16px;padding:24px;text-align:center;
-  background:rgba(74,158,255,0.06);border:1px dashed rgba(74,158,255,0.3);
-  margin-bottom:16px;
-}
+.pro-lock{border-radius:16px;padding:24px;text-align:center;
+  background:rgba(74,158,255,0.06);border:1px dashed rgba(74,158,255,0.3);margin-bottom:16px;}
 .pro-lock-icon{font-size:32px;margin-bottom:10px;}
 .pro-lock-title{font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px;}
 .pro-lock-sub{font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.5;}
 
 /* ─ RADAR ─ */
-.radar-frame{width:100%;aspect-ratio:16/9;border-radius:12px;border:1px solid var(--border);
-  background:var(--bg2);overflow:hidden;}
+.radar-frame{width:100%;aspect-ratio:16/9;border-radius:12px;border:1px solid var(--border);background:var(--bg2);overflow:hidden;}
 .radar-frame img{width:100%;height:100%;object-fit:cover;}
 
 /* ─ LOADING ─ */
-.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-height:200px;gap:12px;color:var(--text2);}
-.spin{width:36px;height:36px;border:3px solid rgba(74,158,255,0.2);
-  border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;gap:12px;color:var(--text2);}
+.spin{width:36px;height:36px;border:3px solid rgba(74,158,255,0.2);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ─ SECTION TITLE ─ */
@@ -133,62 +133,72 @@ main{flex:1;padding:28px 24px;max-width:1100px;width:100%;margin:0 auto;}
 .sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
 
 /* ─ AD SLOT ─ */
-.ad-slot{
-  border-radius:12px;padding:14px 16px;
-  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
-  text-align:center;margin-bottom:16px;font-size:11px;color:var(--text3);
-}
+.ad-slot{border-radius:12px;padding:14px 16px;background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.08);text-align:center;margin-bottom:16px;font-size:11px;color:var(--text3);}
 </style>
 </head>
 <body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-radar">
+    <div class="splash-ring"></div>
+    <div class="splash-ring"></div>
+    <div class="splash-ring"></div>
+    <svg class="splash-shield" viewBox="0 0 52 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M26 2L4 12V28C4 41.3 13.6 53.7 26 58C38.4 53.7 48 41.3 48 28V12L26 2Z" fill="rgba(74,158,255,0.15)" stroke="#4A9EFF" stroke-width="2"/>
+      <path d="M18 30L23 35L34 24" stroke="#4A9EFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <div class="splash-wordmark">RESILIENCE <span>WEATHER</span></div>
+  <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+</div>
+
 <div class="app">
 <nav>
   <a href="/" class="nav-logo">RESILIENCE <span>WEATHER</span></a>
   <div class="nav-right">
-    <a href="/download" class="btn btn-outline btn-sm" style="border-color:rgba(16,185,129,0.4);color:#10B981;">📱 Get the App</a>
+    <a href="/download" class="btn btn-outline btn-sm" style="border-color:rgba(16,185,129,0.4);color:#10B981;">Get App</a>
     <% if (isPro) { %>
-      <span class="plan-badge plan-pro">⚡ PRO</span>
+      <span class="plan-badge plan-pro">PRO</span>
       <% if (userName) { %><span style="font-size:12px;color:#94A3B8;">Hi, <%- userName %></span><% } %>
       <a href="/billing/portal" class="btn btn-outline btn-sm">Manage Plan</a>
       <form method="POST" action="/auth/logout" style="margin:0"><button class="btn btn-outline btn-sm" type="submit">Sign Out</button></form>
     <% } else { %>
       <span class="plan-badge plan-free">FREE</span>
       <a href="/login" class="btn btn-outline btn-sm">Sign In</a>
-      <a href="/upgrade" class="btn btn-primary btn-sm">⚡ Go Pro</a>
+      <a href="/upgrade" class="btn btn-primary btn-sm">Go Pro</a>
     <% } %>
   </div>
 </nav>
 
 <main>
-  <!-- App download banner -->
+  <!-- Download banner -->
   <div style="background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(74,158,255,0.08));
     border:1px solid rgba(16,185,129,0.2);border-radius:12px;padding:12px 16px;
     margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
     <div style="display:flex;align-items:center;gap:10px;">
-      <span style="font-size:20px;">📱</span>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
       <div>
         <div style="font-size:13px;font-weight:800;color:#F0F6FF;">Take Resilience Weather everywhere</div>
-        <div style="font-size:11px;color:#94A3B8;">Free iOS &amp; Android app with offline alerts and Apple Watch support</div>
+        <div style="font-size:11px;color:#94A3B8;">Free iOS &amp; Android app — offline alerts, Apple Watch support</div>
       </div>
     </div>
-    <a href="/download" style="background:#10B981;color:#001A0A;padding:8px 16px;border-radius:8px;
-      font-size:12px;font-weight:900;text-decoration:none;white-space:nowrap;">Download Free →</a>
+    <a href="/download" style="background:#10B981;color:#001A0A;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:900;text-decoration:none;white-space:nowrap;">Download Free</a>
   </div>
-  <!-- Location search -->
+
+  <!-- Location -->
   <div class="loc-bar">
     <div class="live-dot" id="loc-dot"></div>
     <input class="loc-input" id="loc-input" type="text" placeholder="Enter city, zip, or use GPS…" />
-    <button class="btn btn-primary" onclick="useGPS()">📍 GPS</button>
+    <button class="btn btn-primary" onclick="useGPS()">GPS</button>
     <button class="btn btn-outline" onclick="searchLocation()">Search</button>
   </div>
 
   <!-- Signal card -->
   <div class="signal-card" id="signal-card">
     <div id="weather-content">
-      <div class="loading">
-        <div class="spin"></div>
-        <span>Detecting your location…</span>
-      </div>
+      <div class="loading"><div class="spin"></div><span>Detecting your location…</span></div>
     </div>
   </div>
 
@@ -199,13 +209,12 @@ main{flex:1;padding:28px 24px;max-width:1100px;width:100%;margin:0 auto;}
   </div>
 
   <% if (!isPro) { %>
-  <!-- Free tier ad -->
   <div class="ad-slot" id="ad-slot">
-    📢 Advertisement · <a href="/upgrade" style="color:var(--primary);font-weight:700">Go Pro to remove ads</a>
+    Sponsored &nbsp;·&nbsp; <a href="/upgrade" style="color:var(--primary);font-weight:700">Go Pro to remove ads</a>
   </div>
   <% } %>
 
-  <!-- Stats row (free) -->
+  <!-- Stats row -->
   <div id="stats-row" style="display:none">
     <div class="grid-4" id="stats-grid"></div>
   </div>
@@ -224,19 +233,19 @@ main{flex:1;padding:28px 24px;max-width:1100px;width:100%;margin:0 auto;}
     <div class="sec-title">Advanced Intelligence</div>
     <div class="grid-3">
       <div class="card">
-        <div class="card-title">🌊 Flood Risk Index</div>
+        <div class="card-title">Flood Risk Index</div>
         <div class="card-val" id="flood-idx">—</div>
         <div class="card-sub">Calculated from NOAA gauge data</div>
       </div>
       <div class="card">
-        <div class="card-title">🌡️ WBGT Heat Stress</div>
+        <div class="card-title">WBGT Heat Stress</div>
         <div class="card-val" id="wbgt-val">—</div>
         <div class="card-sub">OSHA 2026 advisory threshold</div>
       </div>
       <div class="card">
-        <div class="card-title">💨 Wind Chill / Heat Index</div>
+        <div class="card-title">Feels Like</div>
         <div class="card-val" id="feels-like">—</div>
-        <div class="card-sub">Adjusted apparent temperature</div>
+        <div class="card-sub">Wind chill / heat index adjusted</div>
       </div>
     </div>
   </div>
@@ -246,29 +255,31 @@ main{flex:1;padding:28px 24px;max-width:1100px;width:100%;margin:0 auto;}
     <div class="sec-title">Citizen Science</div>
     <div class="grid-2">
       <div class="card">
-        <div class="card-title">🌧️ Log a Weather Observation</div>
+        <div class="card-title">Log a Weather Observation</div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
           <select id="obs-type" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;">
             <option>Rain / Drizzle</option><option>Snow</option><option>Hail</option>
             <option>Flooding</option><option>High Winds</option><option>Clear / Calm</option>
           </select>
           <textarea id="obs-notes" placeholder="Notes (optional)…" rows="2" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;resize:none;"></textarea>
-          <button class="btn btn-primary btn-sm" onclick="submitObs()">Submit to NOAA CoCoRaHS</button>
+          <button class="btn btn-primary btn-sm" onclick="submitObs()">Submit Observation</button>
         </div>
       </div>
       <div class="card">
-        <div class="card-title">📊 Your Observation History</div>
-        <div id="obs-history" style="font-size:12px;color:var(--text2);margin-top:6px;">No observations submitted yet.</div>
+        <div class="card-title">Observation History</div>
+        <div id="obs-history" style="font-size:12px;color:var(--text2);margin-top:6px;">No observations yet.</div>
       </div>
     </div>
   </div>
 
   <% } else { %>
-  <!-- FREE: Pro upsell modules -->
+  <!-- FREE: Pro upsell -->
   <div class="pro-lock">
-    <div class="pro-lock-icon">🔒</div>
+    <div class="pro-lock-icon">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#4A9EFF" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    </div>
     <div class="pro-lock-title">Unlock Advanced Intelligence</div>
-    <div class="pro-lock-sub">Live radar, flood risk index, WBGT heat stress monitoring, AI voice alerts, citizen science export, offline mesh networking, and Apple Watch sync.</div>
+    <div class="pro-lock-sub">Live radar, flood risk index, WBGT heat stress, AI voice alerts, citizen science export, offline mesh networking, Apple Watch sync.</div>
     <a href="/upgrade" class="btn btn-primary">Upgrade to Pro — $4.99/mo</a>
   </div>
   <% } %>
@@ -277,75 +288,94 @@ main{flex:1;padding:28px 24px;max-width:1100px;width:100%;margin:0 auto;}
 </div>
 
 <script>
-const isPro = <%- JSON.stringify(isPro) %>;
-let currentData = null;
+// ─── SVG WEATHER ICONS — Scandinavian minimal ─────────────────────────────
+const WX_ICONS = {
+  sun: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="24" cy="24" r="8"/><line x1="24" y1="4" x2="24" y2="10"/><line x1="24" y1="38" x2="24" y2="44"/><line x1="4" y1="24" x2="10" y2="24"/><line x1="38" y1="24" x2="44" y2="24"/><line x1="9.5" y1="9.5" x2="13.7" y2="13.7"/><line x1="34.3" y1="34.3" x2="38.5" y2="38.5"/><line x1="38.5" y1="9.5" x2="34.3" y2="13.7"/><line x1="13.7" y1="34.3" x2="9.5" y2="38.5"/></svg>`,
+  partly: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="20" r="6"/><line x1="18" y1="8" x2="18" y2="11"/><line x1="8" y1="20" x2="11" y2="20"/><line x1="10.9" y1="12.9" x2="13" y2="15"/><path d="M26 26H14a7 7 0 010-14 7 7 0 0113.3 3A5 5 0 1126 26z"/></svg>`,
+  cloud: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M36 34H12a10 10 0 010-20 10 10 0 0119.3 4A7 7 0 1136 34z"/></svg>`,
+  rain: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M34 28H14a9 9 0 010-18 9 9 0 0117.4 3.6A6 6 0 1134 28z"/><line x1="16" y1="34" x2="14" y2="40"/><line x1="24" y1="34" x2="22" y2="40"/><line x1="32" y1="34" x2="30" y2="40"/></svg>`,
+  snow: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M33 26H15a8 8 0 010-16 8 8 0 0115.6 3.2A5 5 0 1133 26z"/><line x1="16" y1="33" x2="16" y2="41"/><line x1="12" y1="37" x2="20" y2="37"/><line x1="24" y1="33" x2="24" y2="41"/><line x1="20" y1="37" x2="28" y2="37"/><line x1="32" y1="33" x2="32" y2="41"/><line x1="28" y1="37" x2="36" y2="37"/></svg>`,
+  thunder: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M34 26H14a9 9 0 010-18 9 9 0 0117.4 3.6A6 6 0 1134 26z"/><polyline points="27,26 22,36 26,36 21,44"/></svg>`,
+  wind: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 18h22a6 6 0 100-6"/><path d="M8 24h28a6 6 0 110 6H28"/><path d="M8 30h16"/></svg>`,
+  fog: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="8" y1="20" x2="40" y2="20"/><line x1="10" y1="26" x2="38" y2="26"/><line x1="8" y1="32" x2="36" y2="32"/><line x1="12" y1="38" x2="34" y2="38"/></svg>`,
+  tornado: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M10 12h28"/><path d="M13 19h22"/><path d="M17 26h14"/><path d="M20 33h8"/><path d="M22 40h4"/></svg>`,
+};
 
-// ─── GPS auto-detect on load ────────────────────────────────────────────────
+function getWeatherIcon(desc='') {
+  const d = desc.toLowerCase();
+  if (d.includes('tornado')) return WX_ICONS.tornado;
+  if (d.includes('thunder') || d.includes('storm') || d.includes('hurricane')) return WX_ICONS.thunder;
+  if (d.includes('snow') || d.includes('blizzard') || d.includes('sleet') || d.includes('ice')) return WX_ICONS.snow;
+  if (d.includes('rain') || d.includes('shower') || d.includes('drizzle')) return WX_ICONS.rain;
+  if (d.includes('fog') || d.includes('mist') || d.includes('haze')) return WX_ICONS.fog;
+  if (d.includes('wind') || d.includes('breezy') || d.includes('gusty')) return WX_ICONS.wind;
+  if (d.includes('partly') || d.includes('mostly cloudy') || d.includes('mix')) return WX_ICONS.partly;
+  if (d.includes('cloud') || d.includes('overcast')) return WX_ICONS.cloud;
+  if (d.includes('sunny') || d.includes('clear')) return WX_ICONS.sun;
+  return WX_ICONS.partly;
+}
+
+// ─── SPLASH ────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    const s = document.getElementById('splash');
+    if (s) { s.classList.add('hide'); setTimeout(() => s.remove(), 700); }
+  }, 1600);
+
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-      _err => fetchWeather(35.0844, -106.6504) // fallback: Albuquerque
+      _err => fetchWeather(35.0844, -106.6504)
     );
   } else {
     fetchWeather(35.0844, -106.6504);
   }
 });
 
+const isPro = <%- JSON.stringify(isPro) %>;
+
 function useGPS() {
   const dot = document.getElementById('loc-dot');
   dot.style.background = 'var(--amber)';
-  dot.style.animation = 'none';
   navigator.geolocation?.getCurrentPosition(
-    pos => {
-      dot.style.background = 'var(--green)';
-      dot.style.animation = '';
-      fetchWeather(pos.coords.latitude, pos.coords.longitude);
-    },
-    () => {
-      dot.style.background = 'var(--red)';
-      alert('GPS unavailable — enter a location manually.');
-    }
+    pos => { dot.style.background='var(--green)'; fetchWeather(pos.coords.latitude, pos.coords.longitude); },
+    () => { dot.style.background='var(--red)'; alert('GPS unavailable — enter location manually.'); }
   );
 }
 
 function searchLocation() {
   const val = document.getElementById('loc-input').value.trim();
   if (!val) return;
-  // Geocode via nominatim (free, no key needed for low traffic)
   fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&limit=1`)
-    .then(r => r.json())
+    .then(r=>r.json())
     .then(data => {
-      if (!data.length) return alert('Location not found. Try a different query.');
+      if (!data.length) return alert('Location not found.');
       fetchWeather(parseFloat(data[0].lat), parseFloat(data[0].lon));
-    })
-    .catch(() => alert('Geocoding failed.'));
+    });
 }
 
-let _lat = null, _lon = null;
+let _lat=null, _lon=null;
 
 async function fetchWeather(lat, lon) {
-  _lat = lat; _lon = lon;
-  document.getElementById('weather-content').innerHTML = '<div class="loading"><div class="spin"></div><span>Fetching NOAA data…</span></div>';
-  document.getElementById('forecast-section').style.display = 'none';
-  document.getElementById('stats-row').style.display = 'none';
-
+  _lat=lat; _lon=lon;
+  document.getElementById('weather-content').innerHTML='<div class="loading"><div class="spin"></div><span>Fetching NOAA data…</span></div>';
+  document.getElementById('forecast-section').style.display='none';
+  document.getElementById('stats-row').style.display='none';
   try {
     const res = await fetch(`/weather/point?lat=${lat}&lon=${lon}`);
     const data = await res.json();
-    currentData = data;
     renderWeather(data, lat, lon);
     if (isPro) loadRadar(lat, lon);
   } catch(e) {
-    document.getElementById('weather-content').innerHTML = `<p style="color:var(--red)">Failed to load weather: ${e.message}</p>`;
+    document.getElementById('weather-content').innerHTML=`<p style="color:var(--red)">Failed: ${e.message}</p>`;
   }
 }
 
 const signalTheme = {
-  safe:    { bg:'#001A4D', border:'rgba(74,158,255,0.3)',  glow:'rgba(74,158,255,0.1)',  color:'#4A9EFF',   label:'ALL CLEAR' },
-  caution: { bg:'#002060', border:'rgba(245,158,11,0.4)',  glow:'rgba(245,158,11,0.1)',  color:'#F59E0B',   label:'ADVISORY' },
-  warning: { bg:'#3B0000', border:'rgba(239,68,68,0.5)',   glow:'rgba(239,68,68,0.15)', color:'#EF4444',   label:'WARNING' },
-  extreme: { bg:'#2D0040', border:'rgba(162,28,175,0.5)', glow:'rgba(162,28,175,0.15)',color:'#A855F7',  label:'EXTREME' },
+  safe:    {bg:'#001A4D',border:'rgba(74,158,255,0.3)', glow:'rgba(74,158,255,0.1)', color:'#4A9EFF', label:'ALL CLEAR'},
+  caution: {bg:'#002060',border:'rgba(245,158,11,0.4)', glow:'rgba(245,158,11,0.1)', color:'#F59E0B', label:'ADVISORY'},
+  warning: {bg:'#3B0000',border:'rgba(239,68,68,0.5)',  glow:'rgba(239,68,68,0.15)',color:'#EF4444', label:'WARNING'},
+  extreme: {bg:'#2D0040',border:'rgba(162,28,175,0.5)', glow:'rgba(162,28,175,0.15)',color:'#A855F7',label:'EXTREME'},
 };
 
 function renderWeather(data, lat, lon) {
@@ -353,127 +383,106 @@ function renderWeather(data, lat, lon) {
   const card = document.getElementById('signal-card');
   card.style.background = sig.bg;
   card.style.borderColor = sig.border;
-  card.style.setProperty('--sig-glow', sig.glow);
 
   const period = data.periods?.[0] || {};
-  const temp   = period.temperature ? `${period.temperature}°${period.temperatureUnit || 'F'}` : '—';
-  const desc   = period.shortForecast || 'Weather data loaded';
-  const icon   = getWeatherIcon(desc);
+  const temp = period.temperature ? `${period.temperature}&deg;${period.temperatureUnit||'F'}` : '&mdash;';
+  const desc = period.shortForecast || 'Weather data loaded';
+  const iconSvg = getWeatherIcon(desc);
 
   const alertChips = data.alerts.map(a => {
-    const sev = (a.severity || '').toLowerCase();
-    const cls = sev === 'extreme' || sev === 'severe' ? '' : sev === 'moderate' ? 'moderate' : 'minor';
-    return `<span class="alert-chip ${cls}">⚠️ ${a.event}</span>`;
+    const sev = (a.severity||'').toLowerCase();
+    const cls = sev==='extreme'||sev==='severe' ? '' : sev==='moderate' ? 'moderate' : 'minor';
+    return `<span class="alert-chip ${cls}">&#9888; ${a.event}</span>`;
   }).join('');
 
   document.getElementById('weather-content').innerHTML = `
     <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
       <div>
         <div class="signal-label" style="color:${sig.color}">${sig.label}</div>
-        <div style="font-size:72px;line-height:1;">${icon}</div>
+        <div class="wx-icon">${iconSvg}</div>
         <div style="font-family:'Space Mono',monospace;font-size:52px;font-weight:700;line-height:1.1;margin-bottom:6px;">${temp}</div>
-        <div style="font-size:20px;font-weight:800;margin-bottom:4px;">${data.city}${data.state ? ', '+data.state : ''}</div>
+        <div style="font-size:20px;font-weight:800;margin-bottom:4px;">${data.city}${data.state?', '+data.state:''}</div>
         <div style="font-size:14px;color:var(--text2);margin-bottom:14px;">${desc}</div>
         ${alertChips ? '<div style="margin-bottom:4px;">'+alertChips+'</div>' : ''}
       </div>
       <div style="text-align:right;opacity:0.5;font-size:11px;color:var(--text2);">
-        ${lat?.toFixed(3) || ''}° N, ${lon?.toFixed(3) || ''}° W<br>
-        NOAA · ${new Date().toLocaleTimeString()}
+        ${lat?.toFixed(3)||''}&#176; N, ${lon?.toFixed(3)||''}&#176; W<br>
+        NOAA &middot; ${new Date().toLocaleTimeString()}
       </div>
-    </div>
-  `;
+    </div>`;
 
-  // Update PRO values
   if (isPro) {
     const humidity = period.relativeHumidity?.value ?? 50;
     const tempF = period.temperature ?? 70;
-    const wbgt = calcWBGT(tempF, humidity);
-    const feelsLike = period.windSpeed ? calcFeelsLike(tempF, period.windSpeed, humidity) : `${tempF}°F`;
-    document.getElementById('wbgt-val').textContent = `${wbgt}°F`;
-    document.getElementById('feels-like').textContent = feelsLike;
-    document.getElementById('flood-idx').textContent = data.signal === 'extreme' ? 'HIGH' : data.signal === 'warning' ? 'MOD' : 'LOW';
+    document.getElementById('wbgt-val').textContent = calcWBGT(tempF,humidity)+'°F';
+    document.getElementById('feels-like').textContent = period.windSpeed ? calcFeelsLike(tempF,period.windSpeed,humidity) : `${tempF}°F`;
+    document.getElementById('flood-idx').textContent = data.signal==='extreme'?'HIGH':data.signal==='warning'?'MOD':'LOW';
   }
 
-  // Forecast
-  if (data.periods?.length) {
-    renderForecast(data.periods);
-    renderStats(data.periods[0]);
-  }
+  if (data.periods?.length) { renderForecast(data.periods); renderStats(data.periods[0]); }
 }
 
 function renderForecast(periods) {
   const fc = document.getElementById('forecast-scroll');
-
-  // Pair day + night periods to show high/low
   const days = [];
-  for (let i = 0; i < periods.length; i++) {
+  for (let i=0; i<periods.length; i++) {
     const p = periods[i];
     if (p.isDaytime) {
-      const night = periods[i + 1] && !periods[i + 1].isDaytime ? periods[i + 1] : null;
-      days.push({ day: p, night });
-    } else if (days.length === 0) {
-      // Edge case: first period is night (after midnight)
-      days.push({ day: p, night: null });
+      const night = periods[i+1] && !periods[i+1].isDaytime ? periods[i+1] : null;
+      days.push({day:p, night});
+    } else if (days.length===0) {
+      days.push({day:p, night:null});
     }
   }
-
-  fc.innerHTML = days.slice(0, 7).map(({ day, night }) => {
-    const name = day.name?.replace('This', 'Today').split(' ').slice(0,1).join('') || '—';
+  fc.innerHTML = days.slice(0,7).map(({day,night}) => {
+    const name = day.name?.replace('This','Today').split(' ')[0] || '—';
     const hi = day.temperature ?? '—';
     const lo = night?.temperature ?? null;
-    const unit = day.temperatureUnit || 'F';
-    const desc = day.shortForecast || '';
-    return `
-    <div class="fc-item">
+    const unit = day.temperatureUnit||'F';
+    const desc = day.shortForecast||'';
+    return `<div class="fc-item">
       <div class="fc-day">${name}</div>
       <div class="fc-icon">${getWeatherIcon(desc)}</div>
-      <div class="fc-temp">${hi}°${unit}</div>
-      ${lo !== null ? `<div class="fc-lo">${lo}°${unit}</div>` : ''}
+      <div class="fc-temp">${hi}&deg;${unit}</div>
+      ${lo!==null?`<div class="fc-lo">${lo}&deg;${unit}</div>`:''}
       <div class="fc-desc">${desc.split(' ').slice(0,3).join(' ')}</div>
     </div>`;
   }).join('');
-
-  document.getElementById('forecast-section').style.display = 'block';
+  document.getElementById('forecast-section').style.display='block';
 }
 
 function renderStats(period) {
   const stats = [
-    { label:'Wind', val: period.windSpeed || '—', sub: period.windDirection || '' },
-    { label:'Humidity', val: period.relativeHumidity?.value ? period.relativeHumidity.value+'%' : '—', sub:'relative humidity' },
-    { label:'Dewpoint', val: period.dewpoint?.value ? Math.round(period.dewpoint.value * 9/5 + 32)+'°F' : '—', sub:'comfort index' },
-    { label:'Precip %', val: period.probabilityOfPrecipitation?.value != null ? period.probabilityOfPrecipitation.value+'%' : '—', sub:'probability' },
+    {label:'Wind', val:period.windSpeed||'—', sub:period.windDirection||''},
+    {label:'Humidity', val:period.relativeHumidity?.value?period.relativeHumidity.value+'%':'—', sub:'relative'},
+    {label:'Dewpoint', val:period.dewpoint?.value?Math.round(period.dewpoint.value*9/5+32)+'°F':'—', sub:'comfort'},
+    {label:'Precip %', val:period.probabilityOfPrecipitation?.value!=null?period.probabilityOfPrecipitation.value+'%':'—', sub:'probability'},
   ];
-  const grid = document.getElementById('stats-grid');
-  grid.innerHTML = stats.map(s => `
+  document.getElementById('stats-grid').innerHTML = stats.map(s=>`
     <div class="card">
       <div class="card-title">${s.label}</div>
       <div class="card-val" style="font-size:22px;">${s.val}</div>
       <div class="card-sub">${s.sub}</div>
     </div>`).join('');
-  document.getElementById('stats-row').style.display = 'block';
+  document.getElementById('stats-row').style.display='block';
 }
 
-async function loadRadar(lat, lon) {
+async function loadRadar(lat,lon) {
   try {
     const r = await fetch(`/weather/radar?lat=${lat}&lon=${lon}`);
     const d = await r.json();
     document.getElementById('radar-frame').innerHTML = `
       <div style="position:relative;width:100%;height:100%;">
-        <iframe 
-          src="https://radar.weather.gov/station/${d.station}/standard"
-          style="width:100%;height:100%;border:none;border-radius:12px;"
-          title="NOAA Radar ${d.station}"
-          loading="lazy">
-        </iframe>
-        <a href="https://radar.weather.gov/station/${d.station}/standard" target="_blank" 
-           style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.75);
-           color:var(--primary);font-size:10px;padding:4px 8px;border-radius:6px;
-           text-decoration:none;font-weight:700;backdrop-filter:blur(4px);">
-          STATION: ${d.station} ↗
-        </a>
+        <iframe src="https://radar.weather.gov/station/${d.station}/standard"
+          style="width:100%;height:100%;border:none;border-radius:12px;" loading="lazy"
+          title="NOAA Radar ${d.station}"></iframe>
+        <a href="https://radar.weather.gov/station/${d.station}/standard" target="_blank"
+          style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.75);
+          color:var(--primary);font-size:10px;padding:4px 8px;border-radius:6px;
+          text-decoration:none;font-weight:700;">STATION: ${d.station} &#8599;</a>
       </div>`;
   } catch(e) {
-    document.getElementById('radar-frame').innerHTML = '<p style="padding:20px;color:var(--text2);">Radar unavailable.</p>';
+    document.getElementById('radar-frame').innerHTML='<p style="padding:20px;color:var(--text2);">Radar unavailable.</p>';
   }
 }
 
@@ -483,53 +492,33 @@ function submitObs() {
   const hist = document.getElementById('obs-history');
   const ts = new Date().toLocaleTimeString();
   hist.innerHTML = `<div style="padding:8px;background:rgba(16,185,129,0.1);border-radius:8px;border:1px solid rgba(16,185,129,0.2);margin-bottom:6px;">
-    <strong style="color:var(--green)">✓ ${type}</strong> <span style="color:var(--text2)">${ts}</span>
-    ${notes ? `<br><span style="color:var(--text2);font-size:11px;">${notes}</span>` : ''}
+    <strong style="color:var(--green)">${type}</strong> <span style="color:var(--text2)">${ts}</span>
+    ${notes?`<br><span style="color:var(--text2);font-size:11px;">${notes}</span>`:''}
   </div>` + hist.innerHTML;
-  document.getElementById('obs-notes').value = '';
+  document.getElementById('obs-notes').value='';
 }
 
-// Helpers
-function getWeatherIcon(desc='') {
-  const d = desc.toLowerCase();
-  if (d.includes('tornado')) return '🌪️';
-  if (d.includes('hurricane')) return '🌀';
-  if (d.includes('snow') || d.includes('blizzard')) return '❄️';
-  if (d.includes('thunder') || d.includes('storm')) return '⛈️';
-  if (d.includes('rain') || d.includes('shower')) return '🌧️';
-  if (d.includes('drizzle')) return '🌦️';
-  if (d.includes('fog') || d.includes('mist')) return '🌫️';
-  if (d.includes('partly')) return '⛅';
-  if (d.includes('cloud') || d.includes('overcast')) return '☁️';
-  if (d.includes('wind')) return '💨';
-  if (d.includes('sunny') || d.includes('clear')) return '☀️';
-  return '🌤️';
+function calcWBGT(tempF,humidity) {
+  const tw = tempF * Math.atan(0.151977*Math.sqrt(humidity+8.313659))
+    + Math.atan(tempF+humidity) - Math.atan(humidity-1.676331)
+    + 0.00391838*humidity**1.5*Math.atan(0.023101*humidity) - 4.686035;
+  return Math.round(0.7*tw+0.3*tempF);
 }
 
-function calcWBGT(tempF, humidity) {
-  // Simplified Liljegren approximation
-  const tw = tempF * Math.atan(0.151977 * Math.sqrt(humidity + 8.313659))
-    + Math.atan(tempF + humidity) - Math.atan(humidity - 1.676331) + 0.00391838 * humidity ** 1.5
-    * Math.atan(0.023101 * humidity) - 4.686035;
-  return Math.round(0.7 * tw + 0.3 * tempF);
-}
-
-function calcFeelsLike(tempF, windSpeedStr, humidity) {
-  const ws = parseFloat(windSpeedStr) || 0;
-  if (tempF < 50 && ws > 3) {
-    const wc = 35.74 + 0.6215*tempF - 35.75*ws**0.16 + 0.4275*tempF*ws**0.16;
+function calcFeelsLike(tempF,windSpeedStr,humidity) {
+  const ws = parseFloat(windSpeedStr)||0;
+  if (tempF<50 && ws>3) {
+    const wc = 35.74+0.6215*tempF-35.75*ws**0.16+0.4275*tempF*ws**0.16;
     return `${Math.round(wc)}°F`;
   }
-  if (tempF > 80) {
-    const hi = -42.379 + 2.04901523*tempF + 10.14333127*humidity - 0.22475541*tempF*humidity
-      - 0.00683783*tempF**2 - 0.05481717*humidity**2 + 0.00122874*tempF**2*humidity
-      + 0.00085282*tempF*humidity**2 - 0.00000199*tempF**2*humidity**2;
+  if (tempF>80) {
+    const hi = -42.379+2.04901523*tempF+10.14333127*humidity-0.22475541*tempF*humidity
+      -0.00683783*tempF**2-0.05481717*humidity**2+0.00122874*tempF**2*humidity
+      +0.00085282*tempF*humidity**2-0.00000199*tempF**2*humidity**2;
     return `${Math.round(hi)}°F`;
   }
   return `${tempF}°F`;
 }
-
-// lat/lon stored globally via fetchWeather
 </script>
 </body>
 </html>
