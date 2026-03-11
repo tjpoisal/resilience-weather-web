@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Resilience Weather - NOAA-powered emergency preparedness app for 15 operational profiles including first responders, farmers, mariners, and families.">
+  <title>Resilience Weather · Built on Live NOAA Data</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #001433;
+      --bg2: #001A4D;
+      --primary: #4A9EFF;
+      --green: #10B981;
+      --amber: #F59E0B;
+      --red: #EF4444;
+      --text: #F0F6FF;
+      --text2: #94A3B8;
+      --text3: #475569;
+      --surface: rgba(255,255,255,0.05);
+      --border: rgba(74,158,255,0.18);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(74,158,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(74,158,255,0.03) 1px, transparent 1px);
+      background-size: 44px 44px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .app { position: relative; z-index: 1; }
+
+    /* NAV */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,20,51,0.9);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-logo {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: 2px;
+      text-decoration: none;
+    }
+    .nav-logo span { color: rgba(255,255,255,0.35); }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s;
+    }
+    .btn-primary { background: var(--primary); color: #001433; }
+    .btn-primary:hover { background: #6FB3FF; transform: translateY(-1px); }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { border-color: var(--primary); }
+    .btn-sm { padding: 6px 12px; font-size: 11px; }
+
+    /* HERO */
+    .hero {
+      padding: 80px 24px 100px;
+      text-align: center;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(74,158,255,0.1);
+      border: 1px solid rgba(74,158,255,0.25);
+      border-radius: 999px;
+      padding: 8px 20px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: 1px;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: clamp(40px, 6vw, 64px);
+      font-weight: 900;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      letter-spacing: -0.5px;
+    }
+    .hero h1 span { color: var(--primary); }
+    .hero p {
+      font-size: 18px;
+      color: var(--text2);
+      line-height: 1.7;
+      max-width: 680px;
+      margin: 0 auto 40px;
+    }
+    .hero-cta {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 60px;
+    }
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 28px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+    }
+    .cta-primary {
+      background: var(--primary);
+      color: #001433;
+    }
+    .cta-primary:hover {
+      background: #6FB3FF;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(74,158,255,0.3);
+    }
+    .cta-secondary {
+      background: transparent;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+    }
+    .cta-secondary:hover {
+      background: rgba(74,158,255,0.1);
+      transform: translateY(-2px);
+    }
+
+    /* FEATURES SECTION */
+    .section {
+      padding: 80px 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .section-title {
+      font-size: clamp(28px, 4vw, 48px);
+      font-weight: 900;
+      text-align: center;
+      margin-bottom: 50px;
+      letter-spacing: -0.5px;
+    }
+    .section-title span { color: var(--primary); }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-bottom: 60px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: -50px;
+      right: -50px;
+      width: 150px;
+      height: 150px;
+      background: radial-gradient(circle, rgba(74,158,255,0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .feature-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-4px);
+      background: rgba(74,158,255,0.08);
+    }
+    .feature-icon {
+      font-size: 32px;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .feature-card h3 {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 1;
+    }
+    .feature-card p {
+      font-size: 14px;
+      color: var(--text2);
+      line-height: 1.6;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* PROFILES SECTION */
+    .profiles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+    }
+    .profile-badge {
+      background: rgba(74,158,255,0.08);
+      border: 1px solid rgba(74,158,255,0.2);
+      border-radius: 10px;
+      padding: 16px 12px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      transition: all 0.2s;
+    }
+    .profile-badge:hover {
+      border-color: var(--primary);
+      background: rgba(74,158,255,0.12);
+      transform: translateY(-2px);
+    }
+
+    /* DOWNLOAD SECTION */
+    .download-section {
+      background: linear-gradient(135deg, rgba(74,158,255,0.1) 0%, rgba(74,158,255,0.05) 100%);
+      border: 1px solid rgba(74,158,255,0.2);
+      border-radius: 24px;
+      padding: 60px 40px;
+      text-align: center;
+      margin-bottom: 80px;
+    }
+    .download-section h2 {
+      font-size: 36px;
+      font-weight: 900;
+      margin-bottom: 20px;
+    }
+    .download-section p {
+      font-size: 16px;
+      color: var(--text2);
+      margin-bottom: 40px;
+    }
+    .download-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .dl-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 32px;
+      border-radius: 12px;
+      border: none;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      text-decoration: none;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+    }
+    .dl-btn-ios { background: var(--primary); color: #001433; }
+    .dl-btn-ios:hover { background: #6FB3FF; transform: translateY(-2px); }
+    .dl-btn-android { background: var(--green); color: #001A0A; }
+    .dl-btn-android:hover { background: #34D399; transform: translateY(-2px); }
+    .dl-btn-web { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+    .dl-btn-web:hover { background: rgba(74,158,255,0.1); transform: translateY(-2px); }
+
+    /* FOOTER */
+    footer {
+      padding: 40px 24px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--text2);
+      font-size: 12px;
+    }
+    footer a { color: var(--primary); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 768px) {
+      .hero { padding: 60px 24px 80px; }
+      .section { padding: 60px 24px; }
+      .download-section { padding: 40px 24px; }
+      .download-buttons { flex-direction: column; }
+      .dl-btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- NAV -->
+    <nav>
+      <a href="/" class="nav-logo">RESILIENCE <span>WEATHER</span></a>
+      <div class="nav-right">
+        <a href="/download" class="btn btn-outline btn-sm">Download</a>
+        <a href="/login" class="btn btn-primary btn-sm">Sign In</a>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-badge">🎯 BUILT ON LIVE NOAA DATA</div>
+      <h1>Emergency Preparedness for <span>Every Profile</span></h1>
+      <p>Resilience Weather adapts to your needs—whether you're a first responder, farmer, mariner, or family. Get live weather alerts, 7-day forecasts, and actionable safety guidance from NOAA.</p>
+      <div class="hero-cta">
+        <a href="/download" class="cta-btn cta-primary">📱 Download Now</a>
+        <a href="#features" class="cta-btn cta-secondary">Learn More</a>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="section" id="features">
+      <h2 class="section-title">Why Choose <span>Resilience</span>?</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <span class="feature-icon">🌐</span>
+          <h3>Live NOAA Integration</h3>
+          <p>Access real-time National Weather Service data, emergency alerts, and forecasts updated every hour.</p>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🗺️</span>
+          <h3>7-Day Forecast</h3>
+          <p>Plan ahead with detailed daily forecasts, precipitation chances, wind speed, and confidence metrics.</p>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">⚡</span>
+          <h3>Emergency Alerts</h3>
+          <p>Receive push notifications for severe weather, floods, heat advisories, and other hazards.</p>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🎯</span>
+          <h3>15 Operational Profiles</h3>
+          <p>Customize your experience for your profession—farmers, mariners, first responders, and more.</p>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">📡</span>
+          <h3>Offline Mode</h3>
+          <p>Network tiers from fiber to mesh networking. Stay connected even when infrastructure fails.</p>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🔒</span>
+          <h3>Privacy-First Design</h3>
+          <p>All data encrypted locally. No tracking. Built for disaster resilience and accessibility.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROFILES -->
+    <section class="section">
+      <h2 class="section-title">Built for <span>Your Role</span></h2>
+      <p style="text-align: center; color: var(--text2); margin-bottom: 40px; font-size: 16px;">
+        Choose from 15 specialized profiles tailored to your needs
+      </p>
+      <div class="profiles-grid">
+        <div class="profile-badge">👥 General Public</div>
+        <div class="profile-badge">🌍 Universal / Accessibility</div>
+        <div class="profile-badge">⛵ Marine / Fisher</div>
+        <div class="profile-badge">🌾 Agricultural</div>
+        <div class="profile-badge">🏗️ Construction / Safety</div>
+        <div class="profile-badge">🏔️ Tribal / Arctic</div>
+        <div class="profile-badge">✈️ Aviation / Drone</div>
+        <div class="profile-badge">🧠 Neurodivergent</div>
+        <div class="profile-badge">🏙️ City / Urban Health</div>
+        <div class="profile-badge">🆘 Post-Disaster Recovery</div>
+        <div class="profile-badge">🚚 Commuter / Logistics</div>
+        <div class="profile-badge">🔬 Citizen Science</div>
+        <div class="profile-badge">🎪 Event Organizer</div>
+        <div class="profile-badge">👨‍👩‍👧 Family / Multi-Location</div>
+        <div class="profile-badge">⚡ Renewable Energy / Grid</div>
+      </div>
+    </section>
+
+    <!-- DOWNLOAD CTA -->
+    <section class="download-section">
+      <h2>Download for iOS, Android, or Web</h2>
+      <p>Available now with full NOAA integration and 7-day forecasts</p>
+      <div class="download-buttons">
+        <a href="/download" class="dl-btn dl-btn-ios">
+          🍎 iPhone
+        </a>
+        <a href="/download" class="dl-btn dl-btn-android">
+          🤖 Android
+        </a>
+        <a href="/dashboard" class="dl-btn dl-btn-web">
+          💻 Web App
+        </a>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <p>
+        Resilience Weather •
+        <a href="/download">Download</a> •
+        <a href="/login">Sign In</a> •
+        Built on <a href="https://api.weather.gov" target="_blank">NOAA Data</a>
+      </p>
+      <p style="margin-top: 12px;">
+        © 2026 Get Stack MAX LLC. Privacy-first weather resilience platform.
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

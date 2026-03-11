@@ -72,7 +72,7 @@ router.get('/verify', async (req, res) => {
     req.session.email = entry.email;
     req.session.plan  = user.plan || 'free';
     req.session.name  = user.name || entry.email.split('@')[0];
-    res.redirect('/');
+    res.redirect('/dashboard');
   } catch (e) {
     res.redirect('/login?error=failed');
   }

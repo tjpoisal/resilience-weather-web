@@ -90,11 +90,11 @@ router.get('/portal', async (req, res) => {
     const stripe = getStripe();
     const portal = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${process.env.APP_URL}/`,
+      return_url: `${process.env.APP_URL}/dashboard`,
     });
     res.redirect(portal.url);
   } catch (e) {
-    res.redirect('/');
+    res.redirect('/dashboard');
   }
 });
 

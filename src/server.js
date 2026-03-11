@@ -33,8 +33,14 @@ app.use('/billing', billingRouter);
 app.use('/weather', weatherRouter);
 app.use('/auth',    authRouter);
 
-// Home — dashboard
-app.get('/', async (req, res) => {
+// Home — landing page (or redirect to dashboard if authenticated)
+app.get('/', (req, res) => {
+  if (req.session?.email) return res.redirect('/dashboard');
+  res.render('home');
+});
+
+// Dashboard — authenticated users only
+app.get('/dashboard', async (req, res) => {
   res.render('dashboard', {
     isPro: req.isPro,
     plan: req.session?.plan ?? 'free',
@@ -82,6 +88,70 @@ app.get('/billing/portal', async (req, res) => {
 app.get('/login', (req, res) => {
   if (req.session?.email && req.session?.plan === 'pro') return res.redirect('/');
   res.render('login');
+});
+
+
+// Download page
+app.get('/download', (req, res) => {
+  const APP_VERSION = process.env.APP_VERSION || '1.0.0';
+  const APP_URL     = process.env.APP_URL || 'http://localhost:3000';
+  
+  // These will be populated when builds are ready
+  const androidApkUrl   = process.env.ANDROID_APK_URL   || null;
+  const iosManifestUrl  = process.env.IOS_MANIFEST_URL  || null;
+
+  res.render('download', {
+    isPro: req.isPro,
+    androidApkUrl,
+    iosManifestUrl,
+    androidVersion: APP_VERSION,
+    iosVersion:     APP_VERSION,
+    androidSize:    process.env.ANDROID_APK_SIZE || null,
+  });
+});
+
+// iOS OTA manifest (plist)
+app.get('/ios/manifest.plist', (req, res) => {
+  const APP_URL    = process.env.APP_URL || 'http://localhost:3000';
+  const ipaUrl     = process.env.IOS_IPA_URL || `${APP_URL}/ios/ResilienceWeather.ipa`;
+  const version    = process.env.APP_VERSION || '1.0.0';
+  const bundleId   = process.env.IOS_BUNDLE_ID || 'com.getstackmax.resilienceweather';
+
+  res.set('Content-Type', 'text/xml');
+  res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>items</key>
+  <array>
+    <dict>
+      <key>assets</key>
+      <array>
+        <dict>
+          <key>kind</key><string>software-package</string>
+          <key>url</key><string>${ipaUrl}</string>
+        </dict>
+        <dict>
+          <key>kind</key><string>display-image</string>
+          <key>url</key><string>${APP_URL}/images/icon-57.png</string>
+        </dict>
+        <dict>
+          <key>kind</key><string>full-size-image</string>
+          <key>url</key><string>${APP_URL}/images/icon-512.png</string>
+        </dict>
+      </array>
+      <key>metadata</key>
+      <dict>
+        <key>bundle-identifier</key><string>${bundleId}</string>
+        <key>bundle-version</key><string>${version}</string>
+        <key>kind</key><string>software</string>
+        <key>title</key><string>Resilience Weather</string>
+        <key>subtitle</key><string>by Get Stack MAX LLC</string>
+      </dict>
+    </dict>
+  </array>
+</dict>
+</plist>`);
 });
 
 const PORT = process.env.PORT || 3000;
