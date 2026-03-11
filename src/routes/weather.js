@@ -21,7 +21,7 @@ router.get('/point', async (req, res) => {
     ]);
 
     const periods = forecast.status === 'fulfilled'
-      ? forecast.value.data.properties.periods.slice(0, 8)
+      ? forecast.value.data.properties.periods.slice(0, 14)
       : [];
 
     const activeAlerts = alerts.status === 'fulfilled'

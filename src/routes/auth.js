@@ -1,80 +1,99 @@
-const express = require('express');
-const router  = express.Router();
-const crypto  = require('crypto');
+const express  = require('express');
+const router   = express.Router();
+const crypto   = require('crypto');
+const { getUser, createUser, grantPro } = require('../lib/users');
 
-// ─── Pro users — email : hashed password ─────────────────────────────────
-// To generate a hash: node -e "const c=require('crypto');console.log(c.createHash('sha256').update('yourpassword').digest('hex'))"
-const PRO_USERS = {
-  'tjpoisal@gmail.com': {
-    passwordHash: null, // set on first login via /auth/set-password, or hardcoded below
-    plan: 'pro',
-    name: 'Tim',
-    forever: true, // never expires
-  }
-};
+// Magic link tokens (in-memory, swap for Redis/DB in prod)
+const magicTokens = new Map(); // token -> { email, expires }
 
-// ─── Lifetime Pro emails (always Pro, no password needed for demo) ────────
-const LIFETIME_PRO = new Set(['tjpoisal@gmail.com']);
-
-function hashPassword(pw) {
-  return crypto.createHash('sha256').update(pw + 'rw-salt-2026').digest('hex');
+function generateToken() {
+  return crypto.randomBytes(32).toString('hex');
 }
 
-// POST /auth/login
-router.post('/login', (req, res) => {
-  const { email, password } = req.body;
+// ─── POST /auth/login — passwordless magic link OR direct for known Pro ───────
+router.post('/login', async (req, res) => {
+  const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email required' });
-
   const lower = email.toLowerCase().trim();
 
-  // Lifetime Pro — just email, no password needed on web
-  if (LIFETIME_PRO.has(lower)) {
-    req.session.email = lower;
-    req.session.plan  = 'pro';
-    req.session.name  = PRO_USERS[lower]?.name ?? 'Pro User';
-    return res.json({ ok: true, plan: 'pro', name: req.session.name });
-  }
+  try {
+    // Check if user exists
+    let user = await getUser(lower);
 
-  // Regular users
-  const user = PRO_USERS[lower];
-  if (!user) return res.status(401).json({ error: 'Account not found.' });
-  if (user.passwordHash && hashPassword(password || '') !== user.passwordHash) {
-    return res.status(401).json({ error: 'Incorrect password.' });
-  }
+    // First time — create account
+    if (!user) user = await createUser(lower);
 
-  req.session.email = lower;
-  req.session.plan  = user.plan;
-  req.session.name  = user.name;
-  res.json({ ok: true, plan: user.plan, name: user.name });
+    // Hardcoded forever-Pro accounts get instant access (no magic link)
+    const FOREVER_PRO = new Set(['tjpoisal@gmail.com']);
+    if (FOREVER_PRO.has(lower)) {
+      req.session.email = lower;
+      req.session.plan  = 'pro';
+      req.session.name  = user.name || 'Tim';
+      return res.json({ ok: true, plan: 'pro', name: req.session.name, method: 'instant' });
+    }
+
+    // Generate magic link token
+    const token = generateToken();
+    magicTokens.set(token, { email: lower, expires: Date.now() + 15 * 60 * 1000 });
+
+    // In production: send email with magic link
+    // For now: return token directly (dev mode)
+    const magicUrl = `${process.env.APP_URL || 'http://localhost:3000'}/auth/verify?token=${token}`;
+
+    console.log(`Magic link for ${lower}: ${magicUrl}`);
+
+    res.json({
+      ok: true,
+      method: 'magic_link',
+      message: 'Check your email for a sign-in link.',
+      // dev only — remove in prod:
+      devUrl: process.env.NODE_ENV !== 'production' ? magicUrl : undefined,
+    });
+  } catch (e) {
+    console.error('Login error:', e);
+    res.status(500).json({ error: 'Login failed. Try again.' });
+  }
 });
 
-// POST /auth/logout
-router.post('/logout', (req, res) => {
-  req.session.destroy();
-  res.redirect('/');
+// ─── GET /auth/verify?token=xxx — magic link click ───────────────────────────
+router.get('/verify', async (req, res) => {
+  const { token } = req.query;
+  if (!token) return res.redirect('/login?error=invalid');
+
+  const entry = magicTokens.get(token);
+  if (!entry || Date.now() > entry.expires) {
+    return res.redirect('/login?error=expired');
+  }
+
+  magicTokens.delete(token);
+
+  try {
+    const user = await getUser(entry.email) || await createUser(entry.email);
+    req.session.email = entry.email;
+    req.session.plan  = user.plan || 'free';
+    req.session.name  = user.name || entry.email.split('@')[0];
+    res.redirect('/');
+  } catch (e) {
+    res.redirect('/login?error=failed');
+  }
 });
 
-// GET /auth/status
+// ─── GET /auth/status ──────────────────────────────────────────────────────
 router.get('/status', (req, res) => {
   res.json({
     email: req.session?.email ?? null,
     plan:  req.session?.plan  ?? 'free',
     name:  req.session?.name  ?? null,
+    loggedIn: !!req.session?.email,
   });
 });
 
-// POST /auth/set-password  (first-time setup for Pro users)
-router.post('/set-password', (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Email + password required' });
-  const lower = email.toLowerCase().trim();
-  if (!PRO_USERS[lower]) return res.status(404).json({ error: 'Account not found' });
-  PRO_USERS[lower].passwordHash = hashPassword(password);
-  res.json({ ok: true, message: 'Password set. You can now log in.' });
+// ─── POST /auth/logout ─────────────────────────────────────────────────────
+router.post('/logout', (req, res) => {
+  req.session.destroy(() => res.redirect('/'));
 });
 
-// Legacy demo routes (keep for testing)
-router.post('/demo-pro',  (req, res) => { req.session.plan = 'pro';  res.json({ ok: true }); });
-router.post('/demo-free', (req, res) => { req.session.plan = 'free'; res.json({ ok: true }); });
+// ─── Stripe webhook helpers — called from billing.js ──────────────────────
+router.grantProByEmail = grantPro;
 
 module.exports = router;
