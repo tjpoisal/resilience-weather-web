@@ -146,9 +146,12 @@ main{flex:1;padding:28px 24px;max-width:1100px;width:100%;margin:0 auto;}
   <div class="nav-right">
     <% if (isPro) { %>
       <span class="plan-badge plan-pro">⚡ PRO</span>
+      <% if (userName) { %><span style="font-size:12px;color:#94A3B8;">Hi, <%- userName %></span><% } %>
       <a href="/billing/portal" class="btn btn-outline btn-sm">Manage Plan</a>
+      <form method="POST" action="/auth/logout" style="margin:0"><button class="btn btn-outline btn-sm" type="submit">Sign Out</button></form>
     <% } else { %>
       <span class="plan-badge plan-free">FREE</span>
+      <a href="/login" class="btn btn-outline btn-sm">Sign In</a>
       <a href="/upgrade" class="btn btn-primary btn-sm">Upgrade to Pro</a>
     <% } %>
   </div>

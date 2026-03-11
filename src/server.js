@@ -38,6 +38,7 @@ app.get('/', async (req, res) => {
   res.render('dashboard', {
     isPro: req.isPro,
     plan: req.session?.plan ?? 'free',
+    userName: req.session?.name ?? null,
     stripeKey: process.env.STRIPE_PUBLISHABLE_KEY || '',
     priceId: process.env.STRIPE_PRICE_ID || '',
   });
@@ -77,5 +78,13 @@ app.get('/billing/portal', async (req, res) => {
   }
 });
 
+// Login page
+app.get('/login', (req, res) => {
+  if (req.session?.plan === 'pro') return res.redirect('/');
+  res.render('login');
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🌩  Resilience Weather Web running on port ${PORT}`));
+
+

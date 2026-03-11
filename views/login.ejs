@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In · Resilience Weather</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@700&family=DM+Sans:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:#001433;color:#F0F6FF;min-height:100vh;
+  display:flex;align-items:center;justify-content:center;padding:24px;}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(74,158,255,0.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(74,158,255,0.035) 1px,transparent 1px);
+  background-size:44px 44px;pointer-events:none;z-index:0;}
+.glow{position:fixed;top:-200px;left:50%;transform:translateX(-50%);
+  width:600px;height:500px;
+  background:radial-gradient(ellipse,rgba(74,158,255,0.1) 0%,transparent 70%);
+  pointer-events:none;z-index:0;}
+.card{position:relative;z-index:1;width:100%;max-width:400px;
+  background:rgba(255,255,255,0.04);border:1px solid rgba(74,158,255,0.2);
+  border-radius:24px;padding:40px 32px;}
+.logo{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;
+  color:#4A9EFF;letter-spacing:2px;text-align:center;margin-bottom:28px;}
+.logo span{color:rgba(255,255,255,0.3);}
+.shield{text-align:center;font-size:40px;margin-bottom:16px;
+  animation:float 3s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+h1{font-size:22px;font-weight:900;text-align:center;margin-bottom:6px;}
+.sub{font-size:13px;color:#94A3B8;text-align:center;margin-bottom:28px;}
+.field{margin-bottom:14px;}
+label{display:block;font-size:10px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:#94A3B8;margin-bottom:6px;}
+input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
+  border-radius:10px;padding:11px 14px;color:#F0F6FF;
+  font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s;}
+input:focus{border-color:#4A9EFF;}
+.btn{width:100%;padding:14px;border-radius:12px;border:none;
+  background:#4A9EFF;color:#001433;font-size:14px;font-weight:900;
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;margin-top:8px;}
+.btn:hover{background:#6FB3FF;transform:translateY(-1px);}
+.btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+#msg{min-height:20px;font-size:12px;text-align:center;margin-top:12px;color:#F59E0B;}
+.back{display:block;text-align:center;margin-top:16px;font-size:12px;
+  color:#475569;text-decoration:none;}
+.back:hover{color:#94A3B8;}
+.pro-note{margin-top:20px;padding:12px;background:rgba(74,158,255,0.08);
+  border:1px solid rgba(74,158,255,0.2);border-radius:10px;
+  font-size:11px;color:#94A3B8;text-align:center;line-height:1.5;}
+.pro-note strong{color:#4A9EFF;}
+.spin{display:inline-block;width:14px;height:14px;
+  border:2px solid rgba(0,20,51,0.3);border-top-color:#001433;
+  border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<div class="card">
+  <div class="logo">RESILIENCE <span>WEATHER</span></div>
+  <div class="shield">🛡️</div>
+  <h1>Welcome back</h1>
+  <p class="sub">Sign in to access your account</p>
+
+  <div class="field">
+    <label>Email</label>
+    <input type="email" id="email" placeholder="you@example.com" autocomplete="email" />
+  </div>
+  <div class="field" id="pw-field" style="display:none">
+    <label>Password</label>
+    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+  </div>
+
+  <button class="btn" id="login-btn" onclick="handleLogin()">Continue</button>
+  <div id="msg"></div>
+  <a href="/" class="back">← Back to weather</a>
+
+  <div class="pro-note">
+    <strong>⚡ Pro accounts</strong> get zero ads, live radar, advanced intelligence,
+    and all features unlocked.
+  </div>
+</div>
+
+<script>
+let step = 'email';
+
+async function handleLogin() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const btn = document.getElementById('login-btn');
+  const msg = document.getElementById('msg');
+
+  if (!email) { msg.textContent = 'Enter your email.'; return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>';
+  msg.textContent = '';
+
+  try {
+    const res = await fetch('/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+
+    if (res.ok && data.ok) {
+      msg.style.color = '#10B981';
+      msg.textContent = `✓ Welcome${data.name ? ', ' + data.name : ''}! You're on ${data.plan.toUpperCase()}.`;
+      setTimeout(() => window.location.href = '/', 1000);
+    } else if (res.status === 401 && step === 'email') {
+      // Show password field
+      document.getElementById('pw-field').style.display = 'block';
+      document.getElementById('password').focus();
+      step = 'password';
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+      msg.textContent = data.error || 'Enter your password.';
+    } else {
+      msg.style.color = '#EF4444';
+      msg.textContent = data.error || 'Sign in failed.';
+      btn.disabled = false;
+      btn.textContent = 'Continue';
+    }
+  } catch(e) {
+    msg.style.color = '#EF4444';
+    msg.textContent = 'Connection error. Try again.';
+    btn.disabled = false;
+    btn.textContent = 'Continue';
+  }
+}
+
+// Enter key support
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleLogin();
+});
+</script>
+</body>
+</html>
