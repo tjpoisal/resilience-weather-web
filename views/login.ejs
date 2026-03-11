@@ -22,7 +22,7 @@ body::before{content:'';position:fixed;inset:0;
 .logo{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;
   color:#4A9EFF;letter-spacing:2px;text-align:center;margin-bottom:28px;}
 .logo span{color:rgba(255,255,255,0.3);}
-.shield{text-align:center;font-size:40px;margin-bottom:16px;
+.shield-wrap{text-align:center;margin-bottom:20px;
   animation:float 3s ease-in-out infinite;}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 h1{font-size:22px;font-weight:900;text-align:center;margin-bottom:6px;}
@@ -40,8 +40,7 @@ input:focus{border-color:#4A9EFF;}
 .btn:hover{background:#6FB3FF;transform:translateY(-1px);}
 .btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
 #msg{min-height:20px;font-size:12px;text-align:center;margin-top:12px;color:#F59E0B;}
-.back{display:block;text-align:center;margin-top:16px;font-size:12px;
-  color:#475569;text-decoration:none;}
+.back{display:block;text-align:center;margin-top:16px;font-size:12px;color:#475569;text-decoration:none;}
 .back:hover{color:#94A3B8;}
 .pro-note{margin-top:20px;padding:12px;background:rgba(74,158,255,0.08);
   border:1px solid rgba(74,158,255,0.2);border-radius:10px;
@@ -57,82 +56,76 @@ input:focus{border-color:#4A9EFF;}
 <div class="glow"></div>
 <div class="card">
   <div class="logo">RESILIENCE <span>WEATHER</span></div>
-  <div class="shield">🛡️</div>
+
+  <!-- SVG shield — no emoji -->
+  <div class="shield-wrap">
+    <svg width="52" height="60" viewBox="0 0 52 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M26 2L4 12V28C4 41.3 13.6 53.7 26 58C38.4 53.7 48 41.3 48 28V12L26 2Z"
+        fill="rgba(74,158,255,0.12)" stroke="#4A9EFF" stroke-width="1.5"/>
+      <path d="M18 30L23 35L34 24" stroke="#4A9EFF" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
   <h1>Welcome back</h1>
-  <p class="sub">Sign in to access your account</p>
+  <p class="sub">Enter your email to sign in or create an account</p>
 
   <div class="field">
     <label>Email</label>
     <input type="email" id="email" placeholder="you@example.com" autocomplete="email" />
   </div>
-  <div class="field" id="pw-field" style="display:none">
-    <label>Password</label>
-    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
-  </div>
 
-  <button class="btn" id="login-btn" onclick="handleLogin()">Continue</button>
+  <button class="btn" id="login-btn" onclick="handleLogin()">Sign In</button>
   <div id="msg"></div>
   <a href="/" class="back">← Back to weather</a>
 
   <div class="pro-note">
-    <strong>⚡ Pro accounts</strong> get zero ads, live radar, advanced intelligence,
+    <strong>Pro accounts</strong> get zero ads, live radar, advanced intelligence,
     and all features unlocked.
   </div>
 </div>
 
 <script>
-let step = 'email';
-
 async function handleLogin() {
   const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value;
-  const btn = document.getElementById('login-btn');
-  const msg = document.getElementById('msg');
+  const btn   = document.getElementById('login-btn');
+  const msg   = document.getElementById('msg');
 
-  if (!email) { msg.textContent = 'Enter your email.'; return; }
+  if (!email) { msg.style.color='#F59E0B'; msg.textContent='Enter your email.'; return; }
 
   btn.disabled = true;
   btn.innerHTML = '<span class="spin"></span>';
   msg.textContent = '';
 
   try {
-    const res = await fetch('/auth/login', {
+    const res  = await fetch('/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email }),
     });
     const data = await res.json();
 
     if (res.ok && data.ok) {
       msg.style.color = '#10B981';
-      msg.textContent = `✓ Welcome${data.name ? ', ' + data.name : ''}! You're on ${data.plan.toUpperCase()}.`;
-      setTimeout(() => window.location.href = '/', 1000);
-    } else if (res.status === 401 && step === 'email') {
-      // Show password field
-      document.getElementById('pw-field').style.display = 'block';
-      document.getElementById('password').focus();
-      step = 'password';
-      btn.disabled = false;
-      btn.textContent = 'Sign In';
-      msg.textContent = data.error || 'Enter your password.';
+      msg.textContent = `Signed in as ${data.plan.toUpperCase()}${data.name ? ' — hi, ' + data.name : ''}`;
+      setTimeout(() => window.location.href = data.redirect || '/dashboard', 900);
     } else {
       msg.style.color = '#EF4444';
-      msg.textContent = data.error || 'Sign in failed.';
+      msg.textContent = data.error || 'Sign in failed. Try again.';
       btn.disabled = false;
-      btn.textContent = 'Continue';
+      btn.textContent = 'Sign In';
     }
   } catch(e) {
     msg.style.color = '#EF4444';
     msg.textContent = 'Connection error. Try again.';
     btn.disabled = false;
-    btn.textContent = 'Continue';
+    btn.textContent = 'Sign In';
   }
 }
 
-// Enter key support
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter') handleLogin();
-});
+document.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+// Auto-focus email field
+window.addEventListener('DOMContentLoaded', () => document.getElementById('email').focus());
 </script>
 </body>
 </html>
