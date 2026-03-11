@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><%- title || 'Resilience Weather' %></title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,900;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:    #001433;
+  --bg2:   #001A4D;
+  --primary: #4A9EFF;
+  --green: #10B981;
+  --amber: #F59E0B;
+  --red:   #EF4444;
+  --text:  #F0F6FF;
+  --text2: #94A3B8;
+  --surface: rgba(255,255,255,0.06);
+  --border: rgba(74,158,255,0.18);
+
+  /* Signal colors */
+  --sig-safe:    #001A4D;
+  --sig-caution: #003B8E;
+  --sig-warning: #DC2626;
+  --sig-extreme: #A21CAF;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body {
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+body::before {
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(74,158,255,0.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(74,158,255,0.035) 1px,transparent 1px);
+  background-size:44px 44px;
+  pointer-events:none;z-index:0;
+}
+.app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;}
+
+/* NAV */
+nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 24px;
+  border-bottom:1px solid var(--border);
+  background:rgba(0,20,51,0.85);
+  backdrop-filter:blur(12px);
+  position:sticky;top:0;z-index:100;
+}
+.nav-logo{
+  font-family:'Space Mono',monospace;
+  font-size:13px;font-weight:700;
+  color:var(--primary);letter-spacing:2px;
+  text-decoration:none;
+}
+.nav-logo span{color:rgba(255,255,255,0.35);}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.plan-badge{
+  font-size:9px;font-weight:800;letter-spacing:1.5px;
+  padding:3px 10px;border-radius:999px;
+}
+.plan-free{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:var(--text2);}
+.plan-pro {background:rgba(74,158,255,0.18);border:1px solid rgba(74,158,255,0.4);color:var(--primary);}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 16px;border-radius:8px;
+  font-size:12px;font-weight:700;letter-spacing:0.3px;
+  cursor:pointer;text-decoration:none;border:none;
+  font-family:'DM Sans',sans-serif;transition:all 0.15s;
+}
+.btn-primary{background:var(--primary);color:#001433;}
+.btn-primary:hover{background:#6FB3FF;transform:translateY(-1px);}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);}
+.btn-outline:hover{border-color:var(--primary);background:rgba(74,158,255,0.1);}
+.btn-sm{padding:6px 12px;font-size:11px;}
+
+/* MAIN */
+main{flex:1;padding:28px 24px;max-width:1100px;width:100%;margin:0 auto;}
+@media(max-width:600px){main{padding:16px;}}
+</style>
+<%- styles || '' %>
+</head>
+<body>
+<div class="app">
+<nav>
+  <a href="/" class="nav-logo">RESILIENCE <span>WEATHER</span></a>
+  <div class="nav-right">
+    <% if (typeof isPro !== 'undefined' && isPro) { %>
+      <span class="plan-badge plan-pro">⚡ PRO</span>
+      <a href="/billing/portal" class="btn btn-outline btn-sm">Manage Plan</a>
+    <% } else { %>
+      <span class="plan-badge plan-free">FREE</span>
+      <a href="/upgrade" class="btn btn-primary btn-sm">Upgrade to Pro</a>
+    <% } %>
+  </div>
+</nav>
+<main>
+  <%- body %>
+</main>
+</div>
+</body>
+</html>

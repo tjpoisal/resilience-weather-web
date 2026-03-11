@@ -1,0 +1,22 @@
+{
+  "name": "resilience-weather-web",
+  "version": "1.0.0",
+  "description": "Resilience Weather — Node.js web app with Stripe paywall",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "stripe": "^14.25.0",
+    "dotenv": "^16.4.5",
+    "axios": "^1.7.2",
+    "express-session": "^1.18.0",
+    "cookie-parser": "^1.4.6",
+    "ejs": "^3.1.10"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

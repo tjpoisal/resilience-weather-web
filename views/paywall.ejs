@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upgrade to Pro · Resilience Weather</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+:root{
+  --bg:#001433;--bg2:#001A4D;--primary:#4A9EFF;
+  --green:#10B981;--amber:#F59E0B;--red:#EF4444;
+  --text:#F0F6FF;--text2:#94A3B8;--text3:#475569;
+  --surface:rgba(255,255,255,0.06);--border:rgba(74,158,255,0.18);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(74,158,255,0.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(74,158,255,0.035) 1px,transparent 1px);
+  background-size:44px 44px;pointer-events:none;z-index:0;}
+
+/* Glow top */
+.glow-top{position:fixed;top:-160px;left:50%;transform:translateX(-50%);
+  width:700px;height:400px;
+  background:radial-gradient(ellipse,rgba(74,158,255,0.12) 0%,transparent 70%);
+  pointer-events:none;z-index:0;}
+
+nav{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;
+  border-bottom:1px solid var(--border);background:rgba(0,20,51,0.85);
+  backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;}
+.nav-logo{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;
+  color:var(--primary);letter-spacing:2px;text-decoration:none;}
+.nav-logo span{color:rgba(255,255,255,0.35);}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;
+  font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;border:none;
+  font-family:'DM Sans',sans-serif;transition:all 0.15s;}
+.btn-sm{padding:6px 12px;font-size:11px;}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);}
+.btn-outline:hover{border-color:var(--primary);}
+
+/* HERO */
+.hero{text-align:center;padding:52px 24px 32px;position:relative;z-index:1;}
+.shield{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:72px;height:72px;border-radius:20px;
+  background:rgba(74,158,255,0.12);border:1px solid rgba(74,158,255,0.3);
+  font-size:34px;margin-bottom:20px;
+  animation:float 3s ease-in-out infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.hero h1{font-size:40px;font-weight:900;letter-spacing:-1px;line-height:1.1;margin-bottom:12px;}
+.hero h1 span{color:var(--primary);}
+.hero p{font-size:16px;color:var(--text2);max-width:480px;margin:0 auto;line-height:1.6;}
+
+/* PLAN CARDS */
+.plans{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:16px;max-width:820px;margin:0 auto 32px;padding:0 24px;
+  position:relative;z-index:1;
+}
+@media(max-width:600px){.plans{grid-template-columns:1fr;}}
+.plan-card{
+  border-radius:20px;padding:24px;border:1px solid;
+  cursor:pointer;transition:all 0.2s;
+  background:var(--surface);border-color:var(--border);
+}
+.plan-card:hover{transform:translateY(-2px);}
+.plan-card.active-free{border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.06);}
+.plan-card.active-pro{border-color:var(--primary);border-width:2px;background:rgba(74,158,255,0.1);}
+.plan-badge-pill{
+  display:inline-block;font-size:9px;font-weight:900;letter-spacing:1.5px;
+  padding:3px 10px;border-radius:999px;margin-bottom:12px;
+}
+.pill-pro{background:var(--primary);color:#001433;}
+.pill-free{background:rgba(255,255,255,0.1);color:var(--text2);}
+.plan-name{font-size:22px;font-weight:900;margin-bottom:4px;}
+.plan-price{font-family:'Space Mono',monospace;font-size:32px;font-weight:700;
+  margin-bottom:4px;color:var(--primary);}
+.plan-price.free-price{color:var(--text2);font-size:24px;}
+.plan-period{font-size:12px;color:var(--text2);margin-bottom:20px;}
+.feature-row{display:flex;align-items:flex-start;gap:10px;padding:7px 0;
+  border-bottom:1px solid rgba(255,255,255,0.04);}
+.feature-row:last-child{border-bottom:none;}
+.feat-icon{
+  width:18px;height:18px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;margin-top:1px;font-weight:900;
+}
+.feat-yes{background:rgba(74,158,255,0.18);color:var(--primary);}
+.feat-no{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.2);}
+.feat-text{font-size:13px;font-weight:500;color:var(--text);line-height:1.4;}
+.feat-text.muted{color:var(--text3);}
+
+/* CTA */
+.cta-wrap{max-width:420px;margin:0 auto;padding:0 24px 48px;position:relative;z-index:1;text-align:center;}
+#upgrade-btn{
+  width:100%;padding:18px;border-radius:16px;border:none;
+  background:var(--primary);color:#001433;
+  font-size:16px;font-weight:900;letter-spacing:0.3px;
+  cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif;
+  margin-bottom:14px;
+}
+#upgrade-btn:hover{background:#6FB3FF;transform:translateY(-2px);box-shadow:0 8px 32px rgba(74,158,255,0.3);}
+#upgrade-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+.legal{font-size:10px;color:var(--text3);line-height:1.6;}
+.legal a{color:var(--text2);text-decoration:underline;}
+
+/* Trust row */
+.trust-row{
+  display:flex;align-items:center;justify-content:center;
+  gap:20px;flex-wrap:wrap;
+  max-width:500px;margin:0 auto 32px;padding:0 24px;
+  font-size:12px;color:var(--text2);
+  position:relative;z-index:1;
+}
+.trust-item{display:flex;align-items:center;gap:6px;}
+
+/* Loading spinner */
+.btn-spin{display:inline-block;width:16px;height:16px;
+  border:2px solid rgba(0,20,51,0.3);border-top-color:#001433;
+  border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+#msg{min-height:28px;font-size:13px;color:var(--amber);margin-bottom:10px;}
+</style>
+</head>
+<body>
+<div class="glow-top"></div>
+<nav>
+  <a href="/" class="nav-logo">RESILIENCE <span>WEATHER</span></a>
+  <a href="/" class="btn btn-outline btn-sm">← Back</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="shield">🛡️</div>
+  <h1>Stay ahead of<br>every <span>hazard.</span></h1>
+  <p>Pro gives you the full Resilience Weather suite — zero ads, live radar, Advanced Intelligence, and offline BLE mesh networking built on NOAA data.</p>
+</div>
+
+<!-- PLANS -->
+<div class="plans">
+  <!-- FREE -->
+  <div class="plan-card" id="card-free" onclick="selectPlan('free')">
+    <div class="plan-badge-pill pill-free">ALWAYS FREE</div>
+    <div class="plan-name">Free</div>
+    <div class="plan-price free-price">$0</div>
+    <div class="plan-period">forever</div>
+    <div class="feature-row"><div class="feat-icon feat-yes">✓</div><div class="feat-text">Live NOAA weather + alerts</div></div>
+    <div class="feature-row"><div class="feat-icon feat-yes">✓</div><div class="feat-text">Basic hazard readout</div></div>
+    <div class="feature-row"><div class="feat-icon feat-yes">✓</div><div class="feat-text">15 adaptive profiles</div></div>
+    <div class="feature-row"><div class="feat-icon feat-no">—</div><div class="feat-text muted">Ads shown between alerts</div></div>
+    <div class="feature-row"><div class="feat-icon feat-no">—</div><div class="feat-text muted">Advanced Intelligence</div></div>
+    <div class="feature-row"><div class="feat-icon feat-no">—</div><div class="feat-text muted">Live radar map</div></div>
+    <div class="feature-row"><div class="feat-icon feat-no">—</div><div class="feat-text muted">Offline mesh networking</div></div>
+    <div class="feature-row"><div class="feat-icon feat-no">—</div><div class="feat-text muted">Citizen science export</div></div>
+  </div>
+
+  <!-- PRO -->
+  <div class="plan-card active-pro" id="card-pro" onclick="selectPlan('pro')">
+    <div class="plan-badge-pill pill-pro">RECOMMENDED</div>
+    <div class="plan-name">Pro</div>
+    <div class="plan-price">$4.99</div>
+    <div class="plan-period">per month · cancel anytime</div>
+    <div class="feature-row"><div class="feat-icon feat-yes">✓</div><div class="feat-text">Everything in Free</div></div>
+    <div class="feature-row"><div class="feat-icon feat-yes">✓</div><div class="feat-text"><strong>Zero ads</strong> — even during warnings</div></div>
+    <div class="feature-row"><div class="feat-icon feat-yes">✓</div><div class="feat-text">All Advanced Intelligence modules</div></div>
+    <div class="feature-row"><div class="feat-icon feat-yes">✓</div><div class="feat-text">Full radar + inundation map</div></div>
+    <div class="feature-row"><div class="feat-icon feat-yes">✓</div><div class="feat-text">WBGT heat stress monitor (OSHA 2026)</div></div>
+    <div class="feature-row"><div class="feat-icon feat-yes">✓</div><div class="feat-text">Offline BLE mesh network (Tier 4)</div></div>
+    <div class="feature-row"><div class="feat-icon feat-yes">✓</div><div class="feat-text">NOAA citizen science export</div></div>
+    <div class="feature-row"><div class="feat-icon feat-yes">✓</div><div class="feat-text">Apple Watch hazard sync</div></div>
+  </div>
+</div>
+
+<!-- TRUST -->
+<div class="trust-row">
+  <div class="trust-item">🔒 Secured by Stripe</div>
+  <div class="trust-item">↩️ Cancel anytime</div>
+  <div class="trust-item">🇺🇸 Built on NOAA data</div>
+  <div class="trust-item">🛡️ No hidden fees</div>
+</div>
+
+<!-- CTA -->
+<div class="cta-wrap">
+  <div id="msg"></div>
+  <button id="upgrade-btn" onclick="handleUpgrade()">Upgrade to Pro — $4.99/mo</button>
+  <div class="legal">
+    Subscription renews monthly at $4.99. Cancel anytime from your account settings.
+    Payment processed securely by Stripe.
+    By subscribing you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+  </div>
+</div>
+
+<script>
+const STRIPE_KEY = '<%- stripeKey %>';
+const PRICE_ID   = '<%- priceId %>';
+const stripe = STRIPE_KEY ? Stripe(STRIPE_KEY) : null;
+let selectedPlan = 'pro';
+
+function selectPlan(plan) {
+  selectedPlan = plan;
+  document.getElementById('card-free').className = 'plan-card' + (plan==='free' ? ' active-free' : '');
+  document.getElementById('card-pro').className  = 'plan-card' + (plan==='pro'  ? ' active-pro'  : '');
+  const btn = document.getElementById('upgrade-btn');
+  if (plan === 'free') {
+    btn.textContent = 'Continue with Free';
+    btn.style.background = 'rgba(255,255,255,0.1)';
+    btn.style.color = 'var(--text)';
+  } else {
+    btn.textContent = 'Upgrade to Pro — $4.99/mo';
+    btn.style.background = 'var(--primary)';
+    btn.style.color = '#001433';
+  }
+}
+
+async function handleUpgrade() {
+  if (selectedPlan === 'free') {
+    window.location.href = '/';
+    return;
+  }
+  const btn = document.getElementById('upgrade-btn');
+  const msg = document.getElementById('msg');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="btn-spin"></span> Redirecting to checkout…';
+  msg.textContent = '';
+
+  try {
+    if (!stripe || !PRICE_ID || PRICE_ID === 'price_...') {
+      // Demo mode — no real Stripe keys yet
+      msg.textContent = '⚠️ Stripe not configured yet. Add STRIPE_SECRET_KEY + STRIPE_PRICE_ID to .env';
+      btn.disabled = false;
+      btn.textContent = 'Upgrade to Pro — $4.99/mo';
+      return;
+    }
+    const res = await fetch('/billing/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ priceId: PRICE_ID }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error(data.error || 'Checkout failed');
+    }
+  } catch (e) {
+    msg.textContent = '❌ ' + e.message;
+    btn.disabled = false;
+    btn.textContent = 'Upgrade to Pro — $4.99/mo';
+  }
+}
+</script>
+</body>
+</html>
