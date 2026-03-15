@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: resilience-postgres
+    environment:
+      POSTGRES_USER: resilience_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-resilience-dev-password}
+      POSTGRES_DB: resilience_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U resilience_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: resilience-app
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://resilience_user:${POSTGRES_PASSWORD:-resilience-dev-password}@postgres:5432/resilience_db
+      SESSION_SECRET: ${SESSION_SECRET:-dev-session-secret}
+      NOAA_BASE_URL: https://api.weather.gov
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_PRICE_ID: ${STRIPE_PRICE_ID}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run dev
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    name: resilience-network
