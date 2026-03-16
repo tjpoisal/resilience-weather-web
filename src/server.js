@@ -82,6 +82,8 @@ app.post('/api/notifications/subscribe', express.json(), (req, res) => {
   res.json({ success: true, message: 'Subscribed to notifications' });
 });
 
+const resilience = require('./routes/resilience');
+app.use('/api', resilience);
 // Error handling
 app.use((err, req, res, next) => {
   console.error('Error:', err.message);
